@@ -6,12 +6,14 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
 
-DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK")
 
+DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK")
 DATA_FILE = "seen_products.json"
 
 headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/140.0.0.0 Safari/537.36"
 }
 
 
@@ -31,12 +33,14 @@ def send_discord(message):
 def load_seen():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            seen = json.load(f)
+    else:
+        seen = {
+            "banba": [],
+            "arnotts": []
+        }
 
-    return {
-        "banba": [],
-        "arnotts": []
-    }
+    return seen
 
 
 def save_seen(seen):
@@ -47,12 +51,20 @@ def save_seen(seen):
 def check_banba():
     products = set()
 
-    base_url = "https://banbatoys.ie/search?sort_by=relevance&q=Sonic&type=product&filter.v.availability=1&filter.v.price.gte=&filter.v.price.lte="
+    base_url = (
+        "https://banbatoys.ie/search?sort_by=relevance&q=Sonic"
+        "&type=product&filter.v.availability=1"
+        "&filter.v.price.gte=&filter.v.price.lte="
+    )
 
     for page in range(1, 4):
         url = base_url + f"&page={page}"
 
-        response = requests.get(url, headers=headers, timeout=30)
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=30
+        )
 
         print(f"Banba page {page}: {response.status_code}")
 
@@ -60,7 +72,10 @@ def check_banba():
             print("Banba page failed.")
             continue
 
-        soup = BeautifulSoup(response.text, "html.parser")
+        soup = BeautifulSoup(
+            response.text,
+            "html.parser"
+        )
 
         for link in soup.find_all("a", href=True):
             href = link["href"]
@@ -75,9 +90,16 @@ def check_banba():
 def check_arnotts():
     products = []
 
-    url = "https://www.arnotts.ie/search/?q=Sonic&srule=SF%20new%20in&start=0&sz=48"
+    url = (
+        "https://www.arnotts.ie/search/"
+        "?q=Sonic&srule=SF%20new%20in&start=0&sz=48"
+    )
 
-    response = requests.get(url, headers=headers, timeout=30)
+    response = requests.get(
+        url,
+        headers=headers,
+        timeout=30
+    )
 
     print(f"Arnotts: {response.status_code}")
 
@@ -85,7 +107,10 @@ def check_arnotts():
         print("Arnotts page failed.")
         return products
 
-    ids = re.findall(r"id:\s*'(\d+)'", response.text)
+    ids = re.findall(
+        r"id:\s*'(\d+)'",
+        response.text
+    )
 
     for product_id in ids:
         if product_id not in products:
@@ -95,69 +120,144 @@ def check_arnotts():
 
 
 def main():
-    dublin_time = datetime.now(ZoneInfo("Europe/Dublin"))
+    dublin_time = datetime.now(
+        ZoneInfo("Europe/Dublin")
+    )
 
-    print("Dublin time:", dublin_time.strftime("%Y-%m-%d %H:%M:%S"))
+    print(
+        "Dublin time:",
+        dublin_time.strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+    )
 
-force_run = os.environ.get("FORCE_RUN") == "true"
+    force_run = (
+        os.environ.get("FORCE_RUN") == "true"
+    )
 
-if dublin_time.hour != 11 and not force_run:
-    print("Not 11am in Dublin. Skipping check.")
-    return
+    if dublin_time.hour != 11 and not force_run:
+        print(
+            "Not 11am in Dublin. Skipping check."
+        )
+        return
 
     seen = load_seen()
 
-    print("Checking Banba...")
+    print("\nChecking Banba...")
+
     banba_products = check_banba()
 
-    print(f"Banba products found: {len(banba_products)}")
+    print(
+        f"Banba products found: "
+        f"{len(banba_products)}"
+    )
 
     new_banba = [
-        product for product in banba_products
+        product
+        for product in banba_products
         if product not in seen["banba"]
     ]
 
-    print(f"New Banba products: {len(new_banba)}")
+    print(
+        f"New Banba products: "
+        f"{len(new_banba)}"
+    )
 
     if new_banba:
         count = len(new_banba)
 
         if count == 1:
-            message = "A new listing at [**Banba Toys!!**](<https://banbatoys.ie/search?sort_by=relevance&q=Sonic&type=product&filter.v.availability=1&filter.v.price.gte=&filter.v.price.lte=>) BEE"
+            message = (
+                "A new listing at "
+                "[**Banba Toys!!**](<"
+                "https://banbatoys.ie/search"
+                "?sort_by=relevance&q=Sonic"
+                "&type=product"
+                "&filter.v.availability=1"
+                "&filter.v.price.gte="
+                "&filter.v.price.lte="
+                ">) BEE"
+            )
         else:
-            message = f"{count} new listings at [**Banba Toys!!**](<https://banbatoys.ie/search?sort_by=relevance&q=Sonic&type=product&filter.v.availability=1&filter.v.price.gte=&filter.v.price.lte=>) BEE"
+            message = (
+                f"{count} new listings at "
+                "[**Banba Toys!!**](<"
+                "https://banbatoys.ie/search"
+                "?sort_by=relevance&q=Sonic"
+                "&type=product"
+                "&filter.v.availability=1"
+                "&filter.v.price.gte="
+                "&filter.v.price.lte="
+                ">) BEE"
+            )
 
         send_discord(message)
 
     print("\nChecking Arnotts...")
+
     arnotts_products = check_arnotts()
 
-    print(f"Arnotts products found: {len(arnotts_products)}")
+    print(
+        f"Arnotts products found: "
+        f"{len(arnotts_products)}"
+    )
 
     new_arnotts = [
-        product for product in arnotts_products
+        product
+        for product in arnotts_products
         if product not in seen["arnotts"]
     ]
 
-    print(f"New Arnotts products: {len(new_arnotts)}")
+    print(
+        f"New Arnotts products: "
+        f"{len(new_arnotts)}"
+    )
 
     if new_arnotts:
         count = len(new_arnotts)
 
         if count == 1:
-            message = "A new listing at [**Arnotts!!**](<https://www.arnotts.ie/search/?q=Sonic&srule=SF%20new%20in&start=0&sz=48>) buzz"
+            message = (
+                "A new listing at "
+                "[**Arnotts!!**](<"
+                "https://www.arnotts.ie/search/"
+                "?q=Sonic"
+                "&srule=SF%20new%20in"
+                "&start=0"
+                "&sz=48"
+                ">) buzz"
+            )
         else:
-            message = f"{count} new listings at [**Arnotts!!**](<https://www.arnotts.ie/search/?q=Sonic&srule=SF%20new%20in&start=0&sz=48>) buzz"
+            message = (
+                f"{count} new listings at "
+                "[**Arnotts!!**](<"
+                "https://www.arnotts.ie/search/"
+                "?q=Sonic"
+                "&srule=SF%20new%20in"
+                "&start=0"
+                "&sz=48"
+                ">) buzz"
+            )
 
         send_discord(message)
 
-    seen["banba"] = sorted(set(seen["banba"]) | set(banba_products))
-    seen["arnotts"] = sorted(set(seen["arnotts"]) | set(arnotts_products))
+    seen["banba"] = sorted(
+        set(seen["banba"])
+        | set(banba_products)
+    )
+
+    seen["arnotts"] = sorted(
+        set(seen["arnotts"])
+        | set(arnotts_products)
+    )
 
     save_seen(seen)
 
     print("\nDone.")
-    print("Saved product history to:", DATA_FILE)
+    print(
+        "Saved product history to:",
+        DATA_FILE
+    )
 
 
 if __name__ == "__main__":
