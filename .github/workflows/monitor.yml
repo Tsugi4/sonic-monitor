@@ -5,6 +5,12 @@ on:
     - cron: "0 10 * * *"
     - cron: "0 11 * * *"
   workflow_dispatch:
+    inputs:
+      test_run:
+        description: "Run the monitor now for testing"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -24,17 +30,19 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests beautifulsoup4
+          pip install requests beautifulsoup4 playwright
+          python -m playwright install --with-deps chromium
 
       - name: Run Sonic Monitor
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: python monitor.py
+          FORCE_RUN: ${{ inputs.test_run }}
+        run: xvfb-run -a python monitor.py
 
       - name: Save product history
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add seen_products.json
-          git diff --cached --quiet || git commit -m "Update seen product history"
+          git diff --cached --quiet || git commit -m "Update product history"
           git push
