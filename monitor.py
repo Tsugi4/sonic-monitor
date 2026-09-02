@@ -158,15 +158,57 @@ def check_smyths():
         print("Opening Smyths...")
 
         try:
-            page.goto(
+            response = page.goto(
                 url,
                 wait_until="domcontentloaded",
                 timeout=60000
             )
 
-            page.wait_for_timeout(5000)
+            page.wait_for_timeout(8000)
 
-            print("Smyths title:", page.title())
+            print(
+                "Smyths HTTP status:",
+                response.status if response else "unknown"
+            )
+
+            print(
+                "Smyths title:",
+                page.title()
+            )
+
+            print(
+                "Smyths URL:",
+                page.url
+            )
+
+            page_text = page.locator("body").inner_text(
+                timeout=10000
+            )
+
+            print(
+                "Smyths page text length:",
+                len(page_text)
+            )
+
+            print(
+                "Smyths contains Sonic:",
+                "sonic" in page_text.lower()
+            )
+
+            print(
+                "Smyths contains access denied:",
+                "access denied" in page_text.lower()
+            )
+
+            print(
+                "Smyths contains suspicious:",
+                "suspicious" in page_text.lower()
+            )
+
+            print(
+                "Smyths page preview:",
+                page_text[:500].replace("\n", " ")
+            )
 
             for selector in [
                 "button:has-text('Accept')",
@@ -177,8 +219,15 @@ def check_smyths():
                     button = page.locator(selector).first
 
                     if button.is_visible(timeout=1000):
+                        print(
+                            "Clicking cookie button:",
+                            selector
+                        )
+
                         button.click()
-                        page.wait_for_timeout(1000)
+
+                        page.wait_for_timeout(1500)
+
                         break
 
                 except Exception:
@@ -186,6 +235,11 @@ def check_smyths():
 
             links = page.locator("a[href]")
             count = links.count()
+
+            print(
+                "Smyths total links found:",
+                count
+            )
 
             for i in range(count):
                 link = links.nth(i)
@@ -226,6 +280,7 @@ def check_smyths():
                     "Smyths returned 0 products. "
                     "Treating check as failed."
                 )
+
                 return None
 
             return products
