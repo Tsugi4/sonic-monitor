@@ -7,8 +7,8 @@ from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 
-DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK")
 
+DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK")
 DATA_FILE = "seen_products.json"
 
 headers = {
@@ -64,7 +64,11 @@ def check_banba():
     for page in range(1, 4):
         url = base_url + f"&page={page}"
 
-        response = requests.get(url, headers=headers, timeout=30)
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=30
+        )
 
         print(f"Banba page {page}: {response.status_code}")
 
@@ -72,7 +76,10 @@ def check_banba():
             print("Banba page failed.")
             continue
 
-        soup = BeautifulSoup(response.text, "html.parser")
+        soup = BeautifulSoup(
+            response.text,
+            "html.parser"
+        )
 
         for link in soup.find_all("a", href=True):
             href = link["href"]
@@ -92,7 +99,11 @@ def check_arnotts():
         "?q=Sonic&srule=SF%20new%20in&start=0&sz=48"
     )
 
-    response = requests.get(url, headers=headers, timeout=30)
+    response = requests.get(
+        url,
+        headers=headers,
+        timeout=30
+    )
 
     print(f"Arnotts: {response.status_code}")
 
@@ -100,7 +111,10 @@ def check_arnotts():
         print("Arnotts page failed.")
         return products
 
-    ids = re.findall(r"id:\s*'(\d+)'", response.text)
+    ids = re.findall(
+        r"id:\s*'(\d+)'",
+        response.text
+    )
 
     for product_id in ids:
         if product_id not in products:
@@ -120,11 +134,16 @@ def check_smyths():
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=False,
-            args=["--disable-blink-features=AutomationControlled"]
+            args=[
+                "--disable-blink-features=AutomationControlled"
+            ]
         )
 
         context = browser.new_context(
-            viewport={"width": 1366, "height": 768},
+            viewport={
+                "width": 1366,
+                "height": 768
+            },
             locale="en-IE",
             timezone_id="Europe/Dublin",
             user_agent=(
@@ -180,7 +199,10 @@ def check_smyths():
                     if "sonic" not in href.lower():
                         continue
 
-                    match = re.search(r"/p/(\d+)", href)
+                    match = re.search(
+                        r"/p/(\d+)",
+                        href
+                    )
 
                     if not match:
                         continue
@@ -193,14 +215,19 @@ def check_smyths():
                 except Exception:
                     pass
 
-            print(f"Smyths products found: {len(products)}")
+            print(
+                f"Smyths products found: {len(products)}"
+            )
 
             browser.close()
 
             return products
 
         except Exception as e:
-            print("Smyths check failed:", e)
+            print(
+                "Smyths check failed:",
+                e
+            )
 
             browser.close()
 
@@ -208,18 +235,26 @@ def check_smyths():
 
 
 def main():
-    dublin_time = datetime.now(ZoneInfo("Europe/Dublin"))
+    dublin_time = datetime.now(
+        ZoneInfo("Europe/Dublin")
+    )
 
     print(
         "Dublin time:",
-        dublin_time.strftime("%Y-%m-%d %H:%M:%S")
+        dublin_time.strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
     )
-    
-force_run = os.environ.get("FORCE_RUN") == "true"
 
-if dublin_time.hour != 11 and not force_run:
-    print("Not 11am in Dublin. Skipping check.")
-    return
+    force_run = (
+        os.environ.get("FORCE_RUN") == "true"
+    )
+
+    if dublin_time.hour != 11 and not force_run:
+        print(
+            "Not 11am in Dublin. Skipping check."
+        )
+        return
 
     seen = load_seen()
 
@@ -228,15 +263,20 @@ if dublin_time.hour != 11 and not force_run:
     smyths_products = check_smyths()
 
     if smyths_products is None:
-        print("Smyths check failed. Keeping existing history.")
+        print(
+            "Smyths check failed. "
+            "Keeping existing history."
+        )
 
     elif seen["smyths"] is None:
         print(
-            f"Smyths baseline established with "
+            "Smyths baseline established with "
             f"{len(smyths_products)} products."
         )
 
-        seen["smyths"] = sorted(smyths_products)
+        seen["smyths"] = sorted(
+            smyths_products
+        )
 
     else:
         new_smyths = [
@@ -245,7 +285,10 @@ if dublin_time.hour != 11 and not force_run:
             if product not in seen["smyths"]
         ]
 
-        print(f"New Smyths products: {len(new_smyths)}")
+        print(
+            f"New Smyths products: "
+            f"{len(new_smyths)}"
+        )
 
         if new_smyths:
             count = len(new_smyths)
@@ -270,14 +313,18 @@ if dublin_time.hour != 11 and not force_run:
             send_discord(message)
 
         seen["smyths"] = sorted(
-            set(seen["smyths"]) | set(smyths_products)
+            set(seen["smyths"])
+            | set(smyths_products)
         )
 
     print("\nChecking Banba...")
 
     banba_products = check_banba()
 
-    print(f"Banba products found: {len(banba_products)}")
+    print(
+        f"Banba products found: "
+        f"{len(banba_products)}"
+    )
 
     new_banba = [
         product
@@ -285,7 +332,10 @@ if dublin_time.hour != 11 and not force_run:
         if product not in seen["banba"]
     ]
 
-    print(f"New Banba products: {len(new_banba)}")
+    print(
+        f"New Banba products: "
+        f"{len(new_banba)}"
+    )
 
     if new_banba:
         count = len(new_banba)
@@ -294,18 +344,24 @@ if dublin_time.hour != 11 and not force_run:
             message = (
                 "A new listing at "
                 "[**Banba Toys!!**](<"
-                "https://banbatoys.ie/search?sort_by=relevance&q=Sonic"
-                "&type=product&filter.v.availability=1"
-                "&filter.v.price.gte=&filter.v.price.lte="
+                "https://banbatoys.ie/search"
+                "?sort_by=relevance&q=Sonic"
+                "&type=product"
+                "&filter.v.availability=1"
+                "&filter.v.price.gte="
+                "&filter.v.price.lte="
                 ">) BEE"
             )
         else:
             message = (
                 f"{count} new listings at "
                 "[**Banba Toys!!**](<"
-                "https://banbatoys.ie/search?sort_by=relevance&q=Sonic"
-                "&type=product&filter.v.availability=1"
-                "&filter.v.price.gte=&filter.v.price.lte="
+                "https://banbatoys.ie/search"
+                "?sort_by=relevance&q=Sonic"
+                "&type=product"
+                "&filter.v.availability=1"
+                "&filter.v.price.gte="
+                "&filter.v.price.lte="
                 ">) BEE"
             )
 
@@ -315,7 +371,10 @@ if dublin_time.hour != 11 and not force_run:
 
     arnotts_products = check_arnotts()
 
-    print(f"Arnotts products found: {len(arnotts_products)}")
+    print(
+        f"Arnotts products found: "
+        f"{len(arnotts_products)}"
+    )
 
     new_arnotts = [
         product
@@ -323,7 +382,10 @@ if dublin_time.hour != 11 and not force_run:
         if product not in seen["arnotts"]
     ]
 
-    print(f"New Arnotts products: {len(new_arnotts)}")
+    print(
+        f"New Arnotts products: "
+        f"{len(new_arnotts)}"
+    )
 
     if new_arnotts:
         count = len(new_arnotts)
@@ -333,7 +395,10 @@ if dublin_time.hour != 11 and not force_run:
                 "A new listing at "
                 "[**Arnotts!!**](<"
                 "https://www.arnotts.ie/search/"
-                "?q=Sonic&srule=SF%20new%20in&start=0&sz=48"
+                "?q=Sonic"
+                "&srule=SF%20new%20in"
+                "&start=0"
+                "&sz=48"
                 ">) buzz"
             )
         else:
@@ -341,24 +406,32 @@ if dublin_time.hour != 11 and not force_run:
                 f"{count} new listings at "
                 "[**Arnotts!!**](<"
                 "https://www.arnotts.ie/search/"
-                "?q=Sonic&srule=SF%20new%20in&start=0&sz=48"
+                "?q=Sonic"
+                "&srule=SF%20new%20in"
+                "&start=0"
+                "&sz=48"
                 ">) buzz"
             )
 
         send_discord(message)
 
     seen["banba"] = sorted(
-        set(seen["banba"]) | set(banba_products)
+        set(seen["banba"])
+        | set(banba_products)
     )
 
     seen["arnotts"] = sorted(
-        set(seen["arnotts"]) | set(arnotts_products)
+        set(seen["arnotts"])
+        | set(arnotts_products)
     )
 
     save_seen(seen)
 
     print("\nDone.")
-    print("Saved product history to:", DATA_FILE)
+    print(
+        "Saved product history to:",
+        DATA_FILE
+    )
 
 
 if __name__ == "__main__":
