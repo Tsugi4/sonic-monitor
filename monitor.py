@@ -2,6 +2,8 @@ import json
 import os
 import requests
 import re
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
 
 DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK")
@@ -93,6 +95,15 @@ def check_arnotts():
 
 
 def main():
+    # Only run at 11:00 Dublin time.
+    dublin_time = datetime.now(ZoneInfo("Europe/Dublin"))
+
+    print("Dublin time:", dublin_time.strftime("%Y-%m-%d %H:%M:%S"))
+
+    if dublin_time.hour != 11:
+        print("Not 11am in Dublin. Skipping check.")
+        return
+
     seen = load_seen()
 
     print("Checking Banba...")
