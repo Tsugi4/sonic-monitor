@@ -99,6 +99,11 @@ def main():
 
     print("Dublin time:", dublin_time.strftime("%Y-%m-%d %H:%M:%S"))
 
+    # Only run at 11am Dublin time.
+    if dublin_time.hour != 11:
+        print("Not 11am in Dublin. Skipping check.")
+        return
+
     seen = load_seen()
 
     print("Checking Banba...")
