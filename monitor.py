@@ -254,7 +254,7 @@ def main():
                     "[**Smyths Toys!!**](<"
                     "https://www.smythstoys.com/ie/en-ie/search"
                     "?text=Sonic&sort=creationDate_dt+desc"
-                    ">) BEE"
+                    ">) beebeebee"
                 )
             else:
                 message = (
@@ -262,7 +262,7 @@ def main():
                     "[**Smyths Toys!!**](<"
                     "https://www.smythstoys.com/ie/en-ie/search"
                     "?text=Sonic&sort=creationDate_dt+desc"
-                    ">) BEE"
+                    ">) beebeebee"
                 )
 
             send_discord(message)
