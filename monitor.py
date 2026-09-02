@@ -95,14 +95,9 @@ def check_arnotts():
 
 
 def main():
-    # Only run at 11:00 Dublin time.
     dublin_time = datetime.now(ZoneInfo("Europe/Dublin"))
 
     print("Dublin time:", dublin_time.strftime("%Y-%m-%d %H:%M:%S"))
-
-    if dublin_time.hour != 11:
-        print("Not 11am in Dublin. Skipping check.")
-        return
 
     seen = load_seen()
 
@@ -150,7 +145,6 @@ def main():
 
         send_discord(message)
 
-    # Save everything we've seen
     seen["banba"] = sorted(set(seen["banba"]) | set(banba_products))
     seen["arnotts"] = sorted(set(seen["arnotts"]) | set(arnotts_products))
 
