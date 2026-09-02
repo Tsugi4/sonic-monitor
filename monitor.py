@@ -221,6 +221,13 @@ def check_smyths():
 
             browser.close()
 
+            if len(products) == 0:
+                print(
+                    "Smyths returned 0 products. "
+                    "Treating check as failed."
+                )
+                return None
+
             return products
 
         except Exception as e:
