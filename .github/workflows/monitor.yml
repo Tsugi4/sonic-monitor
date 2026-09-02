@@ -30,14 +30,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests beautifulsoup4 playwright
-          python -m playwright install --with-deps chromium
-
+          pip install requests beautifulsoup4
+          
       - name: Run Sonic Monitor
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           FORCE_RUN: ${{ inputs.test_run }}
-        run: xvfb-run -a python monitor.py
+        run: python monitor.py
 
       - name: Save product history
         run: |
