@@ -214,10 +214,12 @@ def main():
         "Dublin time:",
         dublin_time.strftime("%Y-%m-%d %H:%M:%S")
     )
+    
+force_run = os.environ.get("FORCE_RUN") == "true"
 
-    if dublin_time.hour != 11:
-        print("Not 11am in Dublin. Skipping check.")
-        return
+if dublin_time.hour != 11 and not force_run:
+    print("Not 11am in Dublin. Skipping check.")
+    return
 
     seen = load_seen()
 
