@@ -1,9 +1,8 @@
+```python
 import json
 import os
 import requests
 import re
-from datetime import datetime
-from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
 
 
@@ -120,27 +119,6 @@ def check_arnotts():
 
 
 def main():
-    dublin_time = datetime.now(
-        ZoneInfo("Europe/Dublin")
-    )
-
-    print(
-        "Dublin time:",
-        dublin_time.strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
-    )
-
-    force_run = (
-        os.environ.get("FORCE_RUN") == "true"
-    )
-
-    if dublin_time.hour != 11 and not force_run:
-        print(
-            "Not 11am in Dublin. Skipping check."
-        )
-        return
-
     seen = load_seen()
 
     print("\nChecking Banba...")
@@ -262,3 +240,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+```
