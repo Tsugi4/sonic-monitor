@@ -173,7 +173,7 @@ def main():
                 "&filter.v.price.gte="
                 "&filter.v.price.lte="
                 ">) BEE\n"
-                f"Product ID: `{id_text}`"
+                f"PID: `{id_text}`"
             )
         else:
             message = (
@@ -186,7 +186,7 @@ def main():
                 "&filter.v.price.gte="
                 "&filter.v.price.lte="
                 ">) BEE\n"
-                f"Product IDs: `{id_text}`"
+                f"PIDs: `{id_text}`"
             )
 
         send_discord(message)
