@@ -85,15 +85,6 @@ def check_banba():
     return sorted(products)
 
 
-def get_banba_product_id(product_path):
-    match = re.search(r"/products/[^/]*?(\d+)$", product_path)
-
-    if match:
-        return match.group(1)
-
-    return product_path
-
-
 def check_arnotts():
     products = []
 
@@ -133,7 +124,10 @@ def main():
 
     banba_products = check_banba()
 
-    print(f"Banba products found: {len(banba_products)}")
+    print(
+        f"Banba products found: "
+        f"{len(banba_products)}"
+    )
 
     new_banba = [
         product
@@ -141,17 +135,13 @@ def main():
         if product not in seen["banba"]
     ]
 
-    print(f"New Banba products: {len(new_banba)}")
+    print(
+        f"New Banba products: "
+        f"{len(new_banba)}"
+    )
 
     if new_banba:
         count = len(new_banba)
-
-        banba_ids = [
-            get_banba_product_id(product)
-            for product in new_banba
-        ]
-
-        id_text = ", ".join(banba_ids)
 
         if count == 1:
             message = (
@@ -163,8 +153,7 @@ def main():
                 "&filter.v.availability=1"
                 "&filter.v.price.gte="
                 "&filter.v.price.lte="
-                ">) BEE\n"
-                f"Product ID: `{id_text}`"
+                ">) BEE"
             )
         else:
             message = (
@@ -176,8 +165,7 @@ def main():
                 "&filter.v.availability=1"
                 "&filter.v.price.gte="
                 "&filter.v.price.lte="
-                ">) BEE\n"
-                f"Product IDs: `{id_text}`"
+                ">) BEE"
             )
 
         send_discord(message)
@@ -186,7 +174,10 @@ def main():
 
     arnotts_products = check_arnotts()
 
-    print(f"Arnotts products found: {len(arnotts_products)}")
+    print(
+        f"Arnotts products found: "
+        f"{len(arnotts_products)}"
+    )
 
     new_arnotts = [
         product
@@ -194,7 +185,10 @@ def main():
         if product not in seen["arnotts"]
     ]
 
-    print(f"New Arnotts products: {len(new_arnotts)}")
+    print(
+        f"New Arnotts products: "
+        f"{len(new_arnotts)}"
+    )
 
     if new_arnotts:
         count = len(new_arnotts)
@@ -225,17 +219,22 @@ def main():
         send_discord(message)
 
     seen["banba"] = sorted(
-        set(seen["banba"]) | set(banba_products)
+        set(seen["banba"])
+        | set(banba_products)
     )
 
     seen["arnotts"] = sorted(
-        set(seen["arnotts"]) | set(arnotts_products)
+        set(seen["arnotts"])
+        | set(arnotts_products)
     )
 
     save_seen(seen)
 
     print("\nDone.")
-    print("Saved product history to:", DATA_FILE)
+    print(
+        "Saved product history to:",
+        DATA_FILE
+    )
 
 
 if __name__ == "__main__":
