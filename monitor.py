@@ -78,18 +78,16 @@ def check_banba():
 
         if "/products/" in href:
             product_path = href.split("?")[0]
-            products.add(product_path)
+
+            match = re.search(
+                r"/products/[^/]*?(\d+)$",
+                product_path
+            )
+
+            if match:
+                products.add(match.group(1))
 
     return sorted(products)
-
-
-def get_banba_product_id(product_path):
-    match = re.search(r"/products/[^/]*?(\d+)$", product_path)
-
-    if match:
-        return match.group(1)
-
-    return product_path
 
 
 def check_arnotts():
@@ -144,12 +142,7 @@ def main():
     if new_banba:
         count = len(new_banba)
 
-        banba_ids = [
-            get_banba_product_id(product)
-            for product in new_banba
-        ]
-
-        id_text = ", ".join(banba_ids)
+        id_text = ", ".join(new_banba)
 
         if count == 1:
             message = (
@@ -178,5 +171,64 @@ def main():
                 f"Product IDs: `{id_text}`"
             )
 
-        send_discord(_
+        send_discord(message)
+
+    print("\nChecking Arnotts...")
+
+    arnotts_products = check_arnotts()
+
+    print(f"Arnotts products found: {len(arnotts_products)}")
+
+    new_arnotts = [
+        product
+        for product in arnotts_products
+        if product not in seen["arnotts"]
+    ]
+
+    print(f"New Arnotts products: {len(new_arnotts)}")
+
+    if new_arnotts:
+        count = len(new_arnotts)
+
+        if count == 1:
+            message = (
+                "A new listing at "
+                "[**Arnotts!!**](<"
+                "https://www.arnotts.ie/search/"
+                "?q=Sonic"
+                "&srule=SF%20new%20in"
+                "&start=0"
+                "&sz=48"
+                ">) buzz"
+            )
+        else:
+            message = (
+                f"{count} new listings at "
+                "[**Arnotts!!**](<"
+                "https://www.arnotts.ie/search/"
+                "?q=Sonic"
+                "&srule=SF%20new%20in"
+                "&start=0"
+                "&sz=48"
+                ">) buzz"
+            )
+
+        send_discord(message)
+
+    seen["banba"] = sorted(
+        set(banba_products)
+    )
+
+    seen["arnotts"] = sorted(
+        set(seen["arnotts"]) | set(arnotts_products)
+    )
+
+    save_seen(seen)
+
+    print("\nDone.")
+    print("Saved product history to:", DATA_FILE)
+
+
+if __name__ == "__main__":
+    main()
 ```
