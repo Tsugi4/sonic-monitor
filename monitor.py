@@ -1,3 +1,4 @@
+```python
 import json
 import os
 import requests
@@ -29,14 +30,35 @@ def send_discord(message):
 
 
 def load_seen():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+    if not os.path.exists(DATA_FILE):
+        return {
+            "banba": [],
+            "arnotts": []
+        }
 
-    return {
-        "banba": [],
-        "arnotts": []
-    }
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            seen = json.load(f)
+
+        if not isinstance(seen, dict):
+            raise ValueError("Invalid seen_products.json format")
+
+        if "banba" not in seen:
+            seen["banba"] = []
+
+        if "arnotts" not in seen:
+            seen["arnotts"] = []
+
+        return seen
+
+    except (json.JSONDecodeError, ValueError):
+        print("seen_products.json is empty or invalid.")
+        print("Starting with a fresh product history.")
+
+        return {
+            "banba": [],
+            "arnotts": []
+        }
 
 
 def save_seen(seen):
@@ -240,3 +262,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+```
