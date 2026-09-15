@@ -1,3 +1,4 @@
+```python
 import json
 import os
 import requests
@@ -49,40 +50,46 @@ def save_seen(seen):
 def check_banba():
     products = set()
 
-    base_url = (
+    url = (
         "https://banbatoys.ie/search?sort_by=relevance&q=Sonic"
         "&type=product&filter.v.availability=1"
         "&filter.v.price.gte=&filter.v.price.lte="
     )
 
-    for page in range(1, 4):
-        url = base_url + f"&page={page}"
+    response = requests.get(
+        url,
+        headers=headers,
+        timeout=30
+    )
 
-        response = requests.get(
-            url,
-            headers=headers,
-            timeout=30
-        )
+    print(f"Banba page 1: {response.status_code}")
 
-        print(f"Banba page {page}: {response.status_code}")
+    if response.status_code != 200:
+        print("Banba page failed.")
+        return []
 
-        if response.status_code != 200:
-            print("Banba page failed.")
-            continue
+    soup = BeautifulSoup(
+        response.text,
+        "html.parser"
+    )
 
-        soup = BeautifulSoup(
-            response.text,
-            "html.parser"
-        )
+    for link in soup.find_all("a", href=True):
+        href = link["href"]
 
-        for link in soup.find_all("a", href=True):
-            href = link["href"]
-
-            if "/products/" in href:
-                product_path = href.split("?")[0]
-                products.add(product_path)
+        if "/products/" in href:
+            product_path = href.split("?")[0]
+            products.add(product_path)
 
     return sorted(products)
+
+
+def get_banba_product_id(product_path):
+    match = re.search(r"/products/[^/]*?(\d+)$", product_path)
+
+    if match:
+        return match.group(1)
+
+    return product_path
 
 
 def check_arnotts():
@@ -124,10 +131,7 @@ def main():
 
     banba_products = check_banba()
 
-    print(
-        f"Banba products found: "
-        f"{len(banba_products)}"
-    )
+    print(f"Banba products found: {len(banba_products)}")
 
     new_banba = [
         product
@@ -135,14 +139,18 @@ def main():
         if product not in seen["banba"]
     ]
 
-    print(
-        f"New Banba products: "
-        f"{len(new_banba)}"
-    )
+    print(f"New Banba products: {len(new_banba)}")
 
     if new_banba:
         count = len(new_banba)
 
+        banba_ids = [
+            get_banba_product_id(product)
+            for product in new_banba
+        ]
+
+        id_text = ", ".join(banba_ids)
+
         if count == 1:
             message = (
                 "A new listing at "
@@ -153,7 +161,8 @@ def main():
                 "&filter.v.availability=1"
                 "&filter.v.price.gte="
                 "&filter.v.price.lte="
-                ">) BEE"
+                ">) BEE\n"
+                f"Product ID: `{id_text}`"
             )
         else:
             message = (
@@ -165,77 +174,9 @@ def main():
                 "&filter.v.availability=1"
                 "&filter.v.price.gte="
                 "&filter.v.price.lte="
-                ">) BEE"
+                ">) BEE\n"
+                f"Product IDs: `{id_text}`"
             )
 
-        send_discord(message)
-
-    print("\nChecking Arnotts...")
-
-    arnotts_products = check_arnotts()
-
-    print(
-        f"Arnotts products found: "
-        f"{len(arnotts_products)}"
-    )
-
-    new_arnotts = [
-        product
-        for product in arnotts_products
-        if product not in seen["arnotts"]
-    ]
-
-    print(
-        f"New Arnotts products: "
-        f"{len(new_arnotts)}"
-    )
-
-    if new_arnotts:
-        count = len(new_arnotts)
-
-        if count == 1:
-            message = (
-                "A new listing at "
-                "[**Arnotts!!**](<"
-                "https://www.arnotts.ie/search/"
-                "?q=Sonic"
-                "&srule=SF%20new%20in"
-                "&start=0"
-                "&sz=48"
-                ">) buzz"
-            )
-        else:
-            message = (
-                f"{count} new listings at "
-                "[**Arnotts!!**](<"
-                "https://www.arnotts.ie/search/"
-                "?q=Sonic"
-                "&srule=SF%20new%20in"
-                "&start=0"
-                "&sz=48"
-                ">) buzz"
-            )
-
-        send_discord(message)
-
-    seen["banba"] = sorted(
-        set(seen["banba"])
-        | set(banba_products)
-    )
-
-    seen["arnotts"] = sorted(
-        set(seen["arnotts"])
-        | set(arnotts_products)
-    )
-
-    save_seen(seen)
-
-    print("\nDone.")
-    print(
-        "Saved product history to:",
-        DATA_FILE
-    )
-
-
-if __name__ == "__main__":
-    main()
+        send_discord(_
+```
