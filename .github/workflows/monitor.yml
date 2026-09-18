@@ -2,7 +2,7 @@ name: Sonic Monitor
 
 on:
   schedule:
-    - cron: "0 07 * * *"
+    - cron: "0 06 * * *"
   workflow_dispatch:
   
 permissions:
